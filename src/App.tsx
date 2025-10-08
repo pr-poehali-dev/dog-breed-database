@@ -1,173 +1,158 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 
 interface Breed {
   id: number;
   name: string;
-  name_en: string;
+  description: string;
+  origin: string;
   size: string;
   temperament: string;
-  energy_level: string;
-  grooming_needs: string;
-  trainability: string;
-  good_with_children: boolean;
-  good_with_pets: boolean;
-  coat_type: string;
-  coat_color: string;
-  origin_country: string;
-  life_expectancy: string;
-  weight_range: string;
-  height_range: string;
-  description: string;
-  photo?: string;
+  care_level: string;
+  activity_level: string;
+  lifespan: string;
+  weight: string;
+  height: string;
 }
 
-const mockBreeds: Breed[] = [
-  {
-    id: 1,
-    name: 'Золотистый ретривер',
-    name_en: 'Golden Retriever',
-    size: 'Большая',
-    temperament: 'Дружелюбный, умный, преданный',
-    energy_level: 'Высокая',
-    grooming_needs: 'Средний',
-    trainability: 'Легко',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Длинная, волнистая',
-    coat_color: 'Золотистый',
-    origin_country: 'Шотландия',
-    life_expectancy: '10-12 лет',
-    weight_range: '25-34 кг',
-    height_range: '51-61 см',
-    description: 'Золотистый ретривер - одна из самых популярных пород в мире. Отличается дружелюбным характером и высоким интеллектом.',
-    photo: '🐕'
-  },
-  {
-    id: 2,
-    name: 'Немецкая овчарка',
-    name_en: 'German Shepherd',
-    size: 'Большая',
-    temperament: 'Умный, храбрый, уверенный',
-    energy_level: 'Очень высокая',
-    grooming_needs: 'Средний',
-    trainability: 'Легко',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Средняя, густая',
-    coat_color: 'Черно-рыжий',
-    origin_country: 'Германия',
-    life_expectancy: '9-13 лет',
-    weight_range: '22-40 кг',
-    height_range: '55-65 см',
-    description: 'Универсальная служебная собака, известная своей преданностью и обучаемостью.',
-    photo: '🐕‍🦺'
-  },
-  {
-    id: 3,
-    name: 'Лабрадор',
-    name_en: 'Labrador Retriever',
-    size: 'Большая',
-    temperament: 'Общительный, энергичный, добрый',
-    energy_level: 'Очень высокая',
-    grooming_needs: 'Минимальный',
-    trainability: 'Легко',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Короткая, густая',
-    coat_color: 'Черный, палевый, шоколадный',
-    origin_country: 'Канада',
-    life_expectancy: '10-14 лет',
-    weight_range: '25-36 кг',
-    height_range: '54-57 см',
-    description: 'Самая популярная семейная собака, обожает воду и активные игры.',
-    photo: '🦮'
-  },
-  {
-    id: 4,
-    name: 'Французский бульдог',
-    name_en: 'French Bulldog',
-    size: 'Маленькая',
-    temperament: 'Игривый, дружелюбный, адаптивный',
-    energy_level: 'Средняя',
-    grooming_needs: 'Минимальный',
-    trainability: 'Средне',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Короткая, гладкая',
-    coat_color: 'Тигровый, палевый, белый',
-    origin_country: 'Франция',
-    life_expectancy: '10-12 лет',
-    weight_range: '8-14 кг',
-    height_range: '28-33 см',
-    description: 'Компактная собака-компаньон с характерной внешностью и веселым нравом.',
-    photo: '🐶'
-  },
-  {
-    id: 5,
-    name: 'Хаски',
-    name_en: 'Siberian Husky',
-    size: 'Средняя',
-    temperament: 'Дружелюбный, независимый, активный',
-    energy_level: 'Очень высокая',
-    grooming_needs: 'Высокий',
-    trainability: 'Средне',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Густая, двойная',
-    coat_color: 'Черно-белый, серо-белый',
-    origin_country: 'Сибирь',
-    life_expectancy: '12-15 лет',
-    weight_range: '16-27 кг',
-    height_range: '50-60 см',
-    description: 'Ездовая собака с яркой внешностью и невероятной выносливостью.',
-    photo: '🐺'
-  },
-  {
-    id: 6,
-    name: 'Бигль',
-    name_en: 'Beagle',
-    size: 'Средняя',
-    temperament: 'Любопытный, веселый, дружелюбный',
-    energy_level: 'Высокая',
-    grooming_needs: 'Минимальный',
-    trainability: 'Средне',
-    good_with_children: true,
-    good_with_pets: true,
-    coat_type: 'Короткая, плотная',
-    coat_color: 'Триколор',
-    origin_country: 'Англия',
-    life_expectancy: '12-15 лет',
-    weight_range: '9-11 кг',
-    height_range: '33-41 см',
-    description: 'Охотничья гончая с отличным нюхом и жизнерадостным характером.',
-    photo: '🐕'
-  }
-];
+interface BreedPhoto {
+  id: number;
+  breed_id: number;
+  photo_url: string;
+  is_primary: boolean;
+  caption: string;
+}
+
+interface BreedCharacteristic {
+  id: number;
+  breed_id: number;
+  characteristic_name: string;
+  rating: number;
+  description: string;
+}
+
+interface BreedReview {
+  id: number;
+  breed_id: number;
+  user_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSize, setSelectedSize] = useState<string>('all');
-  const [selectedEnergy, setSelectedEnergy] = useState<string>('all');
-  const [selectedGrooming, setSelectedGrooming] = useState<string>('all');
+  const [selectedActivity, setSelectedActivity] = useState<string>('all');
+  const [selectedCare, setSelectedCare] = useState<string>('all');
   const [selectedBreed, setSelectedBreed] = useState<Breed | null>(null);
   const [activeTab, setActiveTab] = useState('home');
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [photos, setPhotos] = useState<BreedPhoto[]>([]);
+  const [characteristics, setCharacteristics] = useState<BreedCharacteristic[]>([]);
+  const [reviews, setReviews] = useState<BreedReview[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredBreeds = mockBreeds.filter(breed => {
-    const matchesSearch = breed.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         breed.name_en.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const breedsQuery = `SELECT * FROM t_p79480865_dog_breed_database.breeds ORDER BY name`;
+        const photosQuery = `SELECT * FROM t_p79480865_dog_breed_database.breed_photos ORDER BY breed_id, is_primary DESC`;
+        const charsQuery = `SELECT * FROM t_p79480865_dog_breed_database.breed_characteristics ORDER BY breed_id`;
+        const reviewsQuery = `SELECT * FROM t_p79480865_dog_breed_database.breed_reviews ORDER BY breed_id, created_at DESC`;
+
+        const [breedsRes, photosRes, charsRes, reviewsRes] = await Promise.all([
+          fetch('/api/db/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: breedsQuery })
+          }),
+          fetch('/api/db/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: photosQuery })
+          }),
+          fetch('/api/db/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: charsQuery })
+          }),
+          fetch('/api/db/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query: reviewsQuery })
+          })
+        ]);
+
+        const [breedsData, photosData, charsData, reviewsData] = await Promise.all([
+          breedsRes.json(),
+          photosRes.json(),
+          charsRes.json(),
+          reviewsRes.json()
+        ]);
+
+        setBreeds(breedsData);
+        setPhotos(photosData);
+        setCharacteristics(charsData);
+        setReviews(reviewsData);
+      } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredBreeds = breeds.filter(breed => {
+    const matchesSearch = breed.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSize = selectedSize === 'all' || breed.size === selectedSize;
-    const matchesEnergy = selectedEnergy === 'all' || breed.energy_level === selectedEnergy;
-    const matchesGrooming = selectedGrooming === 'all' || breed.grooming_needs === selectedGrooming;
+    const matchesActivity = selectedActivity === 'all' || breed.activity_level === selectedActivity;
+    const matchesCare = selectedCare === 'all' || breed.care_level === selectedCare;
     
-    return matchesSearch && matchesSize && matchesEnergy && matchesGrooming;
+    return matchesSearch && matchesSize && matchesActivity && matchesCare;
   });
+
+  const getBreedPhoto = (breedId: number, primary: boolean = true) => {
+    const photo = photos.find(p => p.breed_id === breedId && p.is_primary === primary);
+    return photo?.photo_url || '';
+  };
+
+  const getBreedPhotos = (breedId: number) => {
+    return photos.filter(p => p.breed_id === breedId);
+  };
+
+  const getBreedCharacteristics = (breedId: number) => {
+    return characteristics.filter(c => c.breed_id === breedId);
+  };
+
+  const getBreedReviews = (breedId: number) => {
+    return reviews.filter(r => r.breed_id === breedId);
+  };
+
+  const getAverageRating = (breedId: number) => {
+    const breedReviews = getBreedReviews(breedId);
+    if (breedReviews.length === 0) return 0;
+    const sum = breedReviews.reduce((acc, r) => acc + r.rating, 0);
+    return (sum / breedReviews.length).toFixed(1);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="text-6xl animate-pulse">🐾</div>
+          <p className="text-muted-foreground">Загрузка данных о породах...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,40 +242,57 @@ function App() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {mockBreeds.slice(0, 6).map(breed => (
-                  <Card 
-                    key={breed.id} 
-                    className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group overflow-hidden"
-                    onClick={() => setSelectedBreed(breed)}
-                  >
-                    <CardHeader className="pb-4">
-                      <div className="text-6xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
-                        {breed.photo}
-                      </div>
-                      <CardTitle className="font-heading text-xl">{breed.name}</CardTitle>
-                      <CardDescription className="text-sm">{breed.name_en}</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="font-medium">
-                          <Icon name="Ruler" size={14} className="mr-1" />
-                          {breed.size}
-                        </Badge>
-                        <Badge variant="outline" className="font-medium">
-                          <Icon name="Zap" size={14} className="mr-1" />
-                          {breed.energy_level}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {breed.description}
-                      </p>
-                      <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                        <Icon name="Eye" size={16} className="mr-2" />
-                        Подробнее
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                {breeds.slice(0, 6).map(breed => {
+                  const photoUrl = getBreedPhoto(breed.id);
+                  const avgRating = getAverageRating(breed.id);
+                  
+                  return (
+                    <Card 
+                      key={breed.id} 
+                      className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group overflow-hidden"
+                      onClick={() => setSelectedBreed(breed)}
+                    >
+                      <CardHeader className="pb-4">
+                        {photoUrl && (
+                          <div className="w-full h-48 overflow-hidden rounded-lg mb-4">
+                            <img 
+                              src={photoUrl} 
+                              alt={breed.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                          </div>
+                        )}
+                        <CardTitle className="font-heading text-xl">{breed.name}</CardTitle>
+                        <CardDescription className="text-sm">{breed.origin}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary" className="font-medium">
+                            <Icon name="Ruler" size={14} className="mr-1" />
+                            {breed.size}
+                          </Badge>
+                          <Badge variant="outline" className="font-medium">
+                            <Icon name="Zap" size={14} className="mr-1" />
+                            {breed.activity_level}
+                          </Badge>
+                          {avgRating > 0 && (
+                            <Badge variant="outline" className="font-medium">
+                              <Icon name="Star" size={14} className="mr-1 fill-yellow-400 text-yellow-400" />
+                              {avgRating}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {breed.description}
+                        </p>
+                        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <Icon name="Eye" size={16} className="mr-2" />
+                          Подробнее
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </section>
 
@@ -335,8 +337,8 @@ function App() {
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedSize('all');
-                  setSelectedEnergy('all');
-                  setSelectedGrooming('all');
+                  setSelectedActivity('all');
+                  setSelectedCare('all');
                 }}
               >
                 <Icon name="X" size={18} className="mr-2" />
@@ -345,36 +347,53 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBreeds.map(breed => (
-                <Card 
-                  key={breed.id}
-                  className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-                  onClick={() => setSelectedBreed(breed)}
-                >
-                  <CardHeader>
-                    <div className="text-6xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
-                      {breed.photo}
-                    </div>
-                    <CardTitle className="font-heading">{breed.name}</CardTitle>
-                    <CardDescription>{breed.name_en}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">
-                        <Icon name="Ruler" size={14} className="mr-1" />
-                        {breed.size}
-                      </Badge>
-                      <Badge variant="outline">
-                        <Icon name="Zap" size={14} className="mr-1" />
-                        {breed.energy_level}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {breed.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+              {filteredBreeds.map(breed => {
+                const photoUrl = getBreedPhoto(breed.id);
+                const avgRating = getAverageRating(breed.id);
+                
+                return (
+                  <Card 
+                    key={breed.id}
+                    className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group overflow-hidden"
+                    onClick={() => setSelectedBreed(breed)}
+                  >
+                    <CardHeader>
+                      {photoUrl && (
+                        <div className="w-full h-48 overflow-hidden rounded-lg mb-4">
+                          <img 
+                            src={photoUrl} 
+                            alt={breed.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <CardTitle className="font-heading">{breed.name}</CardTitle>
+                      <CardDescription>{breed.origin}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary">
+                          <Icon name="Ruler" size={14} className="mr-1" />
+                          {breed.size}
+                        </Badge>
+                        <Badge variant="outline">
+                          <Icon name="Zap" size={14} className="mr-1" />
+                          {breed.activity_level}
+                        </Badge>
+                        {avgRating > 0 && (
+                          <Badge variant="outline">
+                            <Icon name="Star" size={14} className="mr-1 fill-yellow-400 text-yellow-400" />
+                            {avgRating}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {breed.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
             
             {filteredBreeds.length === 0 && (
@@ -403,41 +422,40 @@ function App() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Все размеры</SelectItem>
-                    <SelectItem value="Маленькая">Маленькая</SelectItem>
-                    <SelectItem value="Средняя">Средняя</SelectItem>
-                    <SelectItem value="Большая">Большая</SelectItem>
-                    <SelectItem value="Гигантская">Гигантская</SelectItem>
+                    <SelectItem value="маленькая">Маленькая</SelectItem>
+                    <SelectItem value="средняя">Средняя</SelectItem>
+                    <SelectItem value="большая">Большая</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Уровень активности</label>
-                <Select value={selectedEnergy} onValueChange={setSelectedEnergy}>
+                <Select value={selectedActivity} onValueChange={setSelectedActivity}>
                   <SelectTrigger>
                     <SelectValue placeholder="Все уровни" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Все уровни</SelectItem>
-                    <SelectItem value="Низкая">Низкая</SelectItem>
-                    <SelectItem value="Средняя">Средняя</SelectItem>
-                    <SelectItem value="Высокая">Высокая</SelectItem>
-                    <SelectItem value="Очень высокая">Очень высокая</SelectItem>
+                    <SelectItem value="низкая">Низкая</SelectItem>
+                    <SelectItem value="средняя">Средняя</SelectItem>
+                    <SelectItem value="высокая">Высокая</SelectItem>
+                    <SelectItem value="очень высокая">Очень высокая</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Потребность в уходе</label>
-                <Select value={selectedGrooming} onValueChange={setSelectedGrooming}>
+                <Select value={selectedCare} onValueChange={setSelectedCare}>
                   <SelectTrigger>
                     <SelectValue placeholder="Все уровни" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Все уровни</SelectItem>
-                    <SelectItem value="Минимальный">Минимальный</SelectItem>
-                    <SelectItem value="Средний">Средний</SelectItem>
-                    <SelectItem value="Высокий">Высокий</SelectItem>
+                    <SelectItem value="низкий">Низкий</SelectItem>
+                    <SelectItem value="средний">Средний</SelectItem>
+                    <SelectItem value="высокий">Высокий</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -450,41 +468,47 @@ function App() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBreeds.map(breed => (
-                <Card 
-                  key={breed.id}
-                  className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-                  onClick={() => setSelectedBreed(breed)}
-                >
-                  <CardHeader>
-                    <div className="text-6xl mb-4 text-center group-hover:scale-110 transition-transform duration-300">
-                      {breed.photo}
-                    </div>
-                    <CardTitle className="font-heading">{breed.name}</CardTitle>
-                    <CardDescription>{breed.name_en}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Размер:</span>
-                        <span className="font-medium">{breed.size}</span>
+              {filteredBreeds.map(breed => {
+                const photoUrl = getBreedPhoto(breed.id);
+                
+                return (
+                  <Card 
+                    key={breed.id}
+                    className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer group overflow-hidden"
+                    onClick={() => setSelectedBreed(breed)}
+                  >
+                    <CardHeader>
+                      {photoUrl && (
+                        <div className="w-full h-48 overflow-hidden rounded-lg mb-4">
+                          <img 
+                            src={photoUrl} 
+                            alt={breed.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <CardTitle className="font-heading">{breed.name}</CardTitle>
+                      <CardDescription>{breed.origin}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Размер:</span>
+                          <span className="font-medium">{breed.size}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Активность:</span>
+                          <span className="font-medium">{breed.activity_level}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Уход:</span>
+                          <span className="font-medium">{breed.care_level}</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Активность:</span>
-                        <span className="font-medium">{breed.energy_level}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Уход:</span>
-                        <span className="font-medium">{breed.grooming_needs}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Дрессировка:</span>
-                        <span className="font-medium">{breed.trainability}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}
@@ -527,7 +551,7 @@ function App() {
                   <ul className="space-y-2">
                     <li className="flex items-start gap-3">
                       <Icon name="Check" size={20} className="text-primary mt-1 shrink-0" />
-                      <span>Детальные описания более 100 пород собак</span>
+                      <span>Детальные описания пород собак с реальными фотографиями</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Icon name="Check" size={20} className="text-primary mt-1 shrink-0" />
@@ -539,11 +563,11 @@ function App() {
                     </li>
                     <li className="flex items-start gap-3">
                       <Icon name="Check" size={20} className="text-primary mt-1 shrink-0" />
-                      <span>Отзывы реальных владельцев собак</span>
+                      <span>Отзывы реальных владельцев собак с оценками</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <Icon name="Check" size={20} className="text-primary mt-1 shrink-0" />
-                      <span>Сравнение пород для более осознанного выбора</span>
+                      <span>Детальные характеристики каждой породы</span>
                     </li>
                   </ul>
                 </div>
@@ -566,14 +590,14 @@ function App() {
           onClick={() => setSelectedBreed(null)}
         >
           <Card 
-            className="max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
+            className="max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <CardHeader className="sticky top-0 bg-card z-10 border-b">
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-3xl font-heading mb-2">{selectedBreed.name}</CardTitle>
-                  <CardDescription className="text-lg">{selectedBreed.name_en}</CardDescription>
+                  <CardDescription className="text-lg">{selectedBreed.origin}</CardDescription>
                 </div>
                 <Button 
                   variant="ghost" 
@@ -585,8 +609,19 @@ function App() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6 pt-6">
-              <div className="text-8xl text-center py-6">
-                {selectedBreed.photo}
+              <div className="grid md:grid-cols-2 gap-4">
+                {getBreedPhotos(selectedBreed.id).slice(0, 4).map((photo, idx) => (
+                  <div key={photo.id} className={idx === 0 ? "md:col-span-2" : ""}>
+                    <div className={`w-full overflow-hidden rounded-lg ${idx === 0 ? 'h-80' : 'h-48'}`}>
+                      <img 
+                        src={photo.photo_url} 
+                        alt={photo.caption}
+                        className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">{photo.caption}</p>
+                  </div>
+                ))}
               </div>
 
               <div>
@@ -594,7 +629,7 @@ function App() {
                 <p className="text-muted-foreground leading-relaxed">{selectedBreed.description}</p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <h4 className="font-heading font-semibold text-lg">Основные характеристики</h4>
                   <div className="space-y-2 text-sm">
@@ -603,20 +638,16 @@ function App() {
                       <span className="font-medium">{selectedBreed.size}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Страна происхождения:</span>
-                      <span className="font-medium">{selectedBreed.origin_country}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Продолжительность жизни:</span>
-                      <span className="font-medium">{selectedBreed.life_expectancy}</span>
+                      <span className="font-medium">{selectedBreed.lifespan}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Вес:</span>
-                      <span className="font-medium">{selectedBreed.weight_range}</span>
+                      <span className="font-medium">{selectedBreed.weight}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Рост:</span>
-                      <span className="font-medium">{selectedBreed.height_range}</span>
+                      <span className="font-medium">{selectedBreed.height}</span>
                     </div>
                   </div>
                 </div>
@@ -626,51 +657,73 @@ function App() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Уровень активности:</span>
-                      <span className="font-medium">{selectedBreed.energy_level}</span>
+                      <span className="font-medium">{selectedBreed.activity_level}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
                       <span className="text-muted-foreground">Потребность в уходе:</span>
-                      <span className="font-medium">{selectedBreed.grooming_needs}</span>
+                      <span className="font-medium">{selectedBreed.care_level}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Дрессировка:</span>
-                      <span className="font-medium">{selectedBreed.trainability}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Тип шерсти:</span>
-                      <span className="font-medium">{selectedBreed.coat_type}</span>
-                    </div>
-                    <div className="flex justify-between py-2 border-b">
-                      <span className="text-muted-foreground">Окрас:</span>
-                      <span className="font-medium">{selectedBreed.coat_color}</span>
+                      <span className="text-muted-foreground">Темперамент:</span>
+                      <span className="font-medium">{selectedBreed.temperament}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h4 className="font-heading font-semibold text-lg mb-3">Темперамент</h4>
-                <p className="text-muted-foreground">{selectedBreed.temperament}</p>
-              </div>
+              {getBreedCharacteristics(selectedBreed.id).length > 0 && (
+                <div>
+                  <h4 className="font-heading font-semibold text-lg mb-3">Детальные характеристики</h4>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {getBreedCharacteristics(selectedBreed.id).map(char => (
+                      <div key={char.id} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">{char.characteristic_name}</span>
+                          <div className="flex gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Icon 
+                                key={i} 
+                                name="Star" 
+                                size={14} 
+                                className={i < char.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{char.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Icon name={selectedBreed.good_with_children ? 'Check' : 'X'} 
-                          size={18} 
-                          className={selectedBreed.good_with_children ? 'text-green-500' : 'text-red-500'} />
-                    <span>Подходит для детей</span>
+              {getBreedReviews(selectedBreed.id).length > 0 && (
+                <div>
+                  <h4 className="font-heading font-semibold text-lg mb-3">
+                    Отзывы владельцев ({getBreedReviews(selectedBreed.id).length})
+                  </h4>
+                  <div className="space-y-4">
+                    {getBreedReviews(selectedBreed.id).slice(0, 3).map(review => (
+                      <Card key={review.id} className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-medium">{review.user_name}</span>
+                          <div className="flex gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Icon 
+                                key={i} 
+                                name="Star" 
+                                size={14} 
+                                className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{review.comment}</p>
+                      </Card>
+                    ))}
                   </div>
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Icon name={selectedBreed.good_with_pets ? 'Check' : 'X'} 
-                          size={18} 
-                          className={selectedBreed.good_with_pets ? 'text-green-500' : 'text-red-500'} />
-                    <span>Уживается с животными</span>
-                  </div>
-                </div>
-              </div>
+              )}
 
               <div className="pt-4 border-t">
                 <Button className="w-full" size="lg">

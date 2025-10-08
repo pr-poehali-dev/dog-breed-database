@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Get reviews for breed",
+      "method": "GET",
+      "path": "/?breed_id=1",
+      "expectedStatus": 200,
+      "skipValidation": true
+    },
+    {
+      "name": "Add review",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "breed_id": 1,
+        "user_name": "Тестовый пользователь",
+        "rating": 5,
+        "review_text": "Отличная порода!"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "id": "number",
+        "user_name": "string",
+        "rating": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
