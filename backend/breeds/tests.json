@@ -1,0 +1,29 @@
+{
+  "tests": [
+    {
+      "name": "Get all breeds",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "skipValidation": true
+    },
+    {
+      "name": "Get breed by ID",
+      "method": "GET",
+      "path": "/?id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "id": 1,
+        "name": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Filter by size",
+      "method": "GET",
+      "path": "/?size=большая",
+      "expectedStatus": 200,
+      "skipValidation": true
+    }
+  ]
+}
