@@ -1,31 +1,29 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import { useState, useEffect } from 'react';
+import { fetchBreeds, type Breed } from '@/lib/api';
 
 export default function HomePage() {
-  const popularBreeds = [
-    {
-      id: 1,
-      name: 'Лабрадор ретривер',
-      image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=400',
-      size: 'Большой',
-      temperament: 'Дружелюбный',
-    },
-    {
-      id: 2,
-      name: 'Немецкая овчарка',
-      image: 'https://images.unsplash.com/photo-1568572933382-74d440642117?w=400',
-      size: 'Большой',
-      temperament: 'Умный',
-    },
-    {
-      id: 3,
-      name: 'Золотистый ретривер',
-      image: 'https://images.unsplash.com/photo-1633722715463-d30f4f325e24?w=400',
-      size: 'Большой',
-      temperament: 'Ласковый',
-    },
-  ];
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadBreeds();
+  }, []);
+
+  const loadBreeds = async () => {
+    try {
+      const data = await fetchBreeds();
+      setBreeds(data.breeds);
+    } catch (error) {
+      console.error('Ошибка загрузки пород:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
@@ -62,37 +60,69 @@ export default function HomePage() {
             Популярные породы
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {popularBreeds.map((breed) => (
-              <Link
-                key={breed.id}
-                to={`/breed/${breed.id}`}
-                className="group cursor-pointer"
-              >
-                <div className="bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 animate-scale-in">
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={breed.image}
-                      alt={breed.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  </div>
-                  <div className="p-6">
-                    <h3 className="text-2xl font-heading font-bold mb-3 text-foreground">
-                      {breed.name}
-                    </h3>
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium">
-                        {breed.size}
-                      </span>
-                      <span className="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
-                        {breed.temperament}
-                      </span>
+            {loading ? (
+              <div className="col-span-3 text-center py-12">
+                <Icon name="Loader2" size={48} className="mx-auto text-primary animate-spin mb-4" />
+                <p className="text-muted-foreground">Загрузка...</p>
+              </div>
+            ) : (
+              breeds.slice(0, 6).map((breed) => (
+                <Link
+                  key={breed.id}
+                  to={`/breed/${breed.id}`}
+                  className="group cursor-pointer"
+                >
+                  <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div className="relative h-64 overflow-hidden">
+                      {breed.primary_photo ? (
+                        <img
+                          src={breed.primary_photo.photo_url}
+                          alt={breed.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center text-6xl">
+                          🐕
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                    <CardHeader>
+                      <CardTitle className="text-xl">{breed.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground flex items-center gap-1">
+                        <Icon name="MapPin" size={14} />
+                        {breed.origin}
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge variant="secondary">
+                          <Icon name="Ruler" size={12} className="mr-1" />
+                          {breed.size}
+                        </Badge>
+                        <Badge variant="outline">
+                          <Icon name="Zap" size={12} className="mr-1" />
+                          {breed.activity_level}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 mt-3">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Icon
+                            key={star}
+                            name={star <= Math.round(breed.avg_rating) ? 'Star' : 'StarOff'}
+                            size={14}
+                            className={star <= Math.round(breed.avg_rating) ? 'text-accent fill-accent' : 'text-muted'}
+                          />
+                        ))}
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({breed.review_count})
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))
+            )}
           </div>
           <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline">

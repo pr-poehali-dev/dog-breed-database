@@ -77,7 +77,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cursor.execute('''
             SELECT * FROM breed_photos
             WHERE breed_id = %s
-            ORDER BY is_primary DESC, id
+            ORDER BY is_main DESC, id
         ''', (breed_id,))
         photos = cursor.fetchall()
         
@@ -143,7 +143,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         cursor.execute('''
             SELECT * FROM breed_photos
-            WHERE breed_id = %s AND is_primary = true
+            WHERE breed_id = %s AND is_main = true
             LIMIT 1
         ''', (breed['id'],))
         primary_photo = cursor.fetchone()

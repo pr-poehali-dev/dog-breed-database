@@ -1,9 +1,3 @@
-'''
-Business: API для работы с отзывами о породах собак
-Args: event - dict с httpMethod, body для POST
-      context - object с request_id, function_name
-Returns: HTTP response с результатом добавления отзыва
-'''
 import json
 import os
 from typing import Dict, Any
@@ -11,6 +5,12 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 
 def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    '''
+    Business: API для работы с отзывами о породах собак
+    Args: event - dict с httpMethod, body, queryStringParameters
+          context - объект с атрибутами request_id, function_name
+    Returns: HTTP response с отзывами или результатом добавления
+    '''
     method: str = event.get('httpMethod', 'GET')
     
     if method == 'OPTIONS':
@@ -19,7 +19,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
                 'Access-Control-Max-Age': '86400'
             },
             'body': '',
@@ -30,116 +30,97 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     if not database_url:
         return {
             'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
             'body': json.dumps({'error': 'Database URL not configured'}),
             'isBase64Encoded': False
         }
     
+    conn = psycopg2.connect(database_url)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
     if method == 'GET':
-        query_params = event.get('queryStringParameters') or {}
-        breed_id = query_params.get('breed_id')
+        params = event.get('queryStringParameters') or {}
+        breed_id = params.get('breed_id')
         
-        if not breed_id:
-            return {
-                'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'error': 'breed_id parameter is required'}),
-                'isBase64Encoded': False
-            }
+        if breed_id:
+            cursor.execute('''
+                SELECT * FROM breed_reviews
+                WHERE breed_id = %s
+                ORDER BY created_at DESC
+            ''', (breed_id,))
+        else:
+            cursor.execute('''
+                SELECT br.*, b.name as breed_name
+                FROM breed_reviews br
+                JOIN breeds b ON br.breed_id = b.id
+                ORDER BY br.created_at DESC
+                LIMIT 50
+            ''')
         
-        conn = psycopg2.connect(database_url)
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        cur.execute('''
-            SELECT id, user_name, rating, review_text, created_at
-            FROM t_p79480865_dog_breed_database.breed_reviews
-            WHERE breed_id = %s
-            ORDER BY created_at DESC
-        ''', (breed_id,))
-        
-        reviews = cur.fetchall()
-        cur.close()
+        reviews = cursor.fetchall()
+        cursor.close()
         conn.close()
-        
-        result = [dict(r) for r in reviews]
         
         return {
             'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps({'reviews': result}, default=str),
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'reviews': [dict(r) for r in reviews]}, default=str),
             'isBase64Encoded': False
         }
     
     if method == 'POST':
-        body_str = event.get('body', '{}')
-        body = json.loads(body_str)
+        body_data = json.loads(event.get('body', '{}'))
         
-        breed_id = body.get('breed_id')
-        user_name = body.get('user_name', 'Аноним')
-        rating = body.get('rating')
-        review_text = body.get('review_text', '')
+        breed_id = body_data.get('breed_id')
+        user_name = body_data.get('user_name')
+        rating = body_data.get('rating')
+        review_text = body_data.get('review_text', '')
         
-        if not breed_id or not rating:
+        if not breed_id or not user_name or not rating:
+            cursor.close()
+            conn.close()
             return {
                 'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'error': 'breed_id and rating are required'}),
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Missing required fields: breed_id, user_name, rating'}),
                 'isBase64Encoded': False
             }
         
-        if not isinstance(rating, int) or rating < 1 or rating > 5:
+        if not (1 <= int(rating) <= 5):
+            cursor.close()
+            conn.close()
             return {
                 'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'error': 'rating must be between 1 and 5'}),
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Rating must be between 1 and 5'}),
                 'isBase64Encoded': False
             }
         
-        conn = psycopg2.connect(database_url)
-        cur = conn.cursor(cursor_factory=RealDictCursor)
-        
-        cur.execute('''
-            INSERT INTO t_p79480865_dog_breed_database.breed_reviews (breed_id, user_name, rating, review_text)
+        cursor.execute('''
+            INSERT INTO breed_reviews (breed_id, user_name, rating, review_text)
             VALUES (%s, %s, %s, %s)
-            RETURNING id, user_name, rating, review_text, created_at
+            RETURNING id, created_at
         ''', (breed_id, user_name, rating, review_text))
         
-        new_review = cur.fetchone()
+        result = cursor.fetchone()
         conn.commit()
-        cur.close()
+        cursor.close()
         conn.close()
         
         return {
             'statusCode': 201,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            'body': json.dumps(dict(new_review), default=str),
+            'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({
+                'success': True,
+                'review_id': result['id'],
+                'created_at': str(result['created_at'])
+            }, default=str),
             'isBase64Encoded': False
         }
     
     return {
         'statusCode': 405,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
+        'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
         'body': json.dumps({'error': 'Method not allowed'}),
         'isBase64Encoded': False
     }
