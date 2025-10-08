@@ -58,7 +58,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         cur.execute('''
             SELECT id, user_name, rating, review_text, created_at
-            FROM breed_reviews
+            FROM t_p79480865_dog_breed_database.breed_reviews
             WHERE breed_id = %s
             ORDER BY created_at DESC
         ''', (breed_id,))
@@ -114,7 +114,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         cur = conn.cursor(cursor_factory=RealDictCursor)
         
         cur.execute('''
-            INSERT INTO breed_reviews (breed_id, user_name, rating, review_text)
+            INSERT INTO t_p79480865_dog_breed_database.breed_reviews (breed_id, user_name, rating, review_text)
             VALUES (%s, %s, %s, %s)
             RETURNING id, user_name, rating, review_text, created_at
         ''', (breed_id, user_name, rating, review_text))
